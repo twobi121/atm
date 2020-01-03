@@ -50,7 +50,7 @@ function View(container) {
         person.personBlock.style.position = 'absolute'
         person.personBlock.style.top = freeAtm.bottom + 'px';
         person.personBlock.style.left = freeAtm.center - person.personBlock.offsetWidth/2 + 'px';
-        console.log(person)
+
     }
 
     this.removePerson = function(person) {
@@ -78,9 +78,11 @@ function Model (view) {
         for (let i = 0; i < 3; i++) {
             this.atmArr.push(new Atm());
         }
+
         this.proxyArr = [];
         this.atmArr.forEach(item => {
-            this.proxyArr.push(this.setProxy.call(this, item)) });
+            this.proxyArr.push(this.setProxy.call(this, item))
+        });
 
 
         this.view.createAtm(this.proxyArr);
@@ -92,15 +94,16 @@ function Model (view) {
             set(target, prop, val) { // для перехвата записи свойств
                 if (prop == 'freeState' && val) {
                     target[prop] = true;
-
+                    console.log('1')
                     that.checkFreeAtm(target);
                     return true;
                 } else if (prop == 'freeState' && !val) {
                     target[prop] = false;
-                    alert('стоп очереди')
+                    console.log(target.freeState)
                     return true;
                 } else {
                     target[prop] = val;
+                    console.log(prop)
                     return true;
                 }
             }
@@ -113,7 +116,7 @@ function Model (view) {
         setTimeout(() => this.createPerson(), 2000);
         setTimeout(() => {
             this.proxyArr.forEach(item => this.checkFreeAtm(item))
-        }, 4000);
+        }, 3000);
 
     }
 
@@ -136,10 +139,10 @@ function Model (view) {
         //     }
         // });
 
-        if (this.personArr[0] && obj) {
+        if (this.personArr[0] && obj.freeState) {
             this.movePerson(this.personArr[0], obj);
             this.personArr.shift();
-        } else obj.freeState = true;
+        } else setTimeout(() => this.checkFreeAtm(obj), 2000);
         
         // setTimeout(() => this.checkFreeAtm(), 2000);
     }
@@ -154,7 +157,7 @@ function Model (view) {
         this.view.removePerson(person);
 
         freeAtm.freeState = true;
-
+    console.log(this.atmArr)
     }
     
 }
@@ -219,6 +222,13 @@ class Person {
     setServeTime() {
         this.serveTime = Math.random() * (6000 - 2000) + 2000;
     }
+}
+
+class Queue {
+    constructor() {
+
+    }
+
 }
 
 const container = document.querySelector('.div_app');
