@@ -76,7 +76,7 @@ function Model (view) {
 
     this.createAtm = function() {
         for (let i = 0; i < 3; i++) {
-            this.atmArr.push(new Atm());
+            this.atmArr.push(new Atm(i + 1));
         }
 
         this.proxyArr = [];
@@ -94,16 +94,13 @@ function Model (view) {
             set(target, prop, val) { // для перехвата записи свойств
                 if (prop == 'freeState' && val) {
                     target[prop] = true;
-                    console.log('1')
-                    that.checkFreeAtm(target);
+                    that.checkFreeAtm(target.id);
                     return true;
                 } else if (prop == 'freeState' && !val) {
                     target[prop] = false;
-                    console.log(target.freeState)
                     return true;
                 } else {
                     target[prop] = val;
-                    console.log(prop)
                     return true;
                 }
             }
@@ -114,9 +111,9 @@ function Model (view) {
     this.initQueue = function() {
 
         setTimeout(() => this.createPerson(), 2000);
-        setTimeout(() => {
-            this.proxyArr.forEach(item => this.checkFreeAtm(item))
-        }, 3000);
+        // setTimeout(() => {
+        //     this.proxyArr.forEach(item => this.checkFreeAtm(item))
+        // }, 3000);
 
     }
 
@@ -127,22 +124,36 @@ function Model (view) {
             this.personArr.push(person);
             person.setServeTime();
             this.view.drawPerson(person);
-        } 
+        }
+
+        if (this.personArr.length == 1) {
+            this.checkFreeAtm();
+        }
+
+
+
         
-        setTimeout(() => this.createPerson(), 1000);
+        setTimeout(() => this.createPerson(), 600);
     }
 
     this.checkFreeAtm = function(obj) {
-        // let freeAtm = this.proxyArr.find(item => {
-        //     if (item.freeState) {
-        //         return item;
-        //     }
-        // });
+        let freeAtm;
+        // debugger
+        if(!obj) {
+            freeAtm = this.proxyArr.find(item => {
+                if (item.freeState) {
+                    return item;
+                }
+            })
+        } else if (typeof(obj) == 'number') {
+            let number = obj - 1;
+            freeAtm = this.proxyArr[number];
+        } else freeAtm = obj;
 
-        if (this.personArr[0] && obj.freeState) {
-            this.movePerson(this.personArr[0], obj);
+        if (this.personArr[0] && freeAtm && freeAtm.freeState) {
+            this.movePerson(this.personArr[0], freeAtm);
             this.personArr.shift();
-        } else setTimeout(() => this.checkFreeAtm(obj), 2000);
+        }
         
         // setTimeout(() => this.checkFreeAtm(), 2000);
     }
@@ -150,14 +161,12 @@ function Model (view) {
     this.movePerson = function(person, freeAtm) {
         freeAtm.freeState = false;
         this.view.movePerson(person, freeAtm);
-        setTimeout( () => this.removePerson(person, freeAtm), person.serveTime);
+        setTimeout( () => this.removePerson(person, freeAtm), 3000);
     }
 
     this.removePerson = function(person, freeAtm) {
         this.view.removePerson(person);
-
         freeAtm.freeState = true;
-    console.log(this.atmArr)
     }
     
 }
@@ -193,8 +202,9 @@ function Controller (model, container) {
 
 
 class Atm {
-    constructor() {
+    constructor(id) {
         this.freeState = true;
+        this.id = id;
     }
 
     createAtm() {
