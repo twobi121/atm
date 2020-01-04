@@ -14,11 +14,14 @@ function View(container) {
         this.btnDiv.className = 'btn_wrapper';
         this.startBtn = document.createElement('button');
         this.stopBtn = document.createElement('button');
+        this.pauseBtn = document.createElement('button');
         this.startBtn.className = 'start btn';
         this.stopBtn.className = 'stop btn';
+        this.pauseBtn.className = 'pause btn';
         this.startBtn.innerText = 'СТАРТ';
         this.stopBtn.innerText = 'СТОП';
-        this.btnDiv.append(this.startBtn, this.stopBtn);
+        this.pauseBtn.innerText = 'ПАУЗА';
+        this.btnDiv.append(this.startBtn, this.stopBtn, this.pauseBtn);
     }
 
     this.createGameBlock = function() {
@@ -29,6 +32,26 @@ function View(container) {
         this.queueBlock = document.createElement('div');
         this.queueBlock.className = 'queue_block';
         this.gameBlock.append(this.atmBlock, this.queueBlock);
+    }
+
+    this.blockStartBtn = function() {
+        this.startBtn.disabled = true;
+    }
+
+    this.unblockStartBtn = function() {
+        this.startBtn.disabled = false;
+    }
+
+    this.removeElems = function() {
+        while (this.atmBlock.firstChild) {
+            this.atmBlock.removeChild(this.atmBlock.firstChild);
+        }
+
+        while (this.queueBlock.firstChild) {
+            this.queueBlock.removeChild(this.queueBlock.firstChild);
+        }
+
+
     }
 
     this.createAtm = function (arr) {
@@ -67,11 +90,24 @@ function Model (view) {
     this.view = view;
     this.atmArr = [];
     this.personArr = [];
-    this.queueLength = 0;
+    this.timersArr = [];
 
     this.startGame = function() {
         this.createAtm();
         this.initQueue();
+    }
+
+    this.blockStartBtn = function() {
+        this.view.blockStartBtn();
+    }
+
+    this.stopGame = function() {
+        this.timersArr.forEach(item => clearTimeout(item));
+        this.timersArr.length = 0;
+        this.atmArr.length = 0;
+        this.proxyArr.length = 0;
+        this.view.removeElems();
+        this.view.unblockStartBtn();
     }
 
     this.createAtm = function() {
@@ -95,9 +131,13 @@ function Model (view) {
                 if (prop == 'freeState' && val) {
                     target[prop] = true;
                     that.checkFreeAtm(target.id);
+                    target.changeColor();
+                    console.log('свободен')
                     return true;
                 } else if (prop == 'freeState' && !val) {
                     target[prop] = false;
+                    target.changeColor();
+                    console.log('занят')
                     return true;
                 } else {
                     target[prop] = val;
@@ -110,7 +150,7 @@ function Model (view) {
 
     this.initQueue = function() {
 
-        setTimeout(() => this.createPerson(), 2000);
+        this.timersArr.push(setTimeout(() => this.createPerson(), 2000));
         // setTimeout(() => {
         //     this.proxyArr.forEach(item => this.checkFreeAtm(item))
         // }, 3000);
@@ -127,13 +167,13 @@ function Model (view) {
         }
 
         if (this.personArr.length == 1) {
-            this.checkFreeAtm();
+            this.timersArr.push(setTimeout( () => this.checkFreeAtm(), 400));
         }
 
 
 
-        
-        setTimeout(() => this.createPerson(), 2000);
+
+        this.timersArr.push(setTimeout(() => this.createPerson(), 2400));
     }
 
     this.checkFreeAtm = function(obj) {
@@ -161,7 +201,7 @@ function Model (view) {
     this.movePerson = function(person, freeAtm) {
         freeAtm.freeState = false;
         this.view.movePerson(person, freeAtm);
-        setTimeout( () => this.removePerson(person, freeAtm), 3000);
+        this.timersArr.push(setTimeout( () => this.removePerson(person, freeAtm), person.serveTime));
     }
 
     this.removePerson = function(person, freeAtm) {
@@ -184,19 +224,35 @@ function Controller (model, container) {
     this.addBtnListen = function () {
         this.btnDiv.addEventListener('click', (event) => {
             let e = event.target;
-            if (e.innerText == 'СТАРТ') {
-                this.startGame();
-            } else this.stopGame();
+
+            switch (e.innerText) {
+                case 'СТАРТ':
+                    this.startGame();
+                    break;
+                case 'СТОП':
+                    this.stopGame();
+                    break;
+                case 'ПАУЗА':
+                    this.pauseGame();
+                    break;
+            }
+
         });
     }
 
     this.startGame = function() {
         this.model.startGame();
+        this.model.blockStartBtn();
     }
 
     this.stopGame = function() {
         this.model.stopGame();
     }
+
+    this.pauseGame = function() {
+        this.model.pauseGame();
+    }
+
     
 }
 
@@ -209,13 +265,20 @@ class Atm {
 
     createAtm() {
         this.atmItem = document.createElement('div');
-        this.atmItem.className = 'atm_item'; 
+        this.atmItem.className = 'atm_item';
     }
 
     getBottomCoords() {
         this.bottom = this.atmItem.offsetTop + this.atmItem.offsetHeight;
         this.center = this.atmItem.offsetLeft + this.atmItem.offsetWidth/4;
     }
+
+    changeColor() {
+        if (this.freeState) {
+            this.atmItem.style.backgroundColor = 'green';
+        } else this.atmItem.style.backgroundColor = 'red';
+    }
+
 }
 
 
