@@ -133,7 +133,7 @@ function Model (view) {
 
 
         
-        setTimeout(() => this.createPerson(), 600);
+        setTimeout(() => this.createPerson(), 2000);
     }
 
     this.checkFreeAtm = function(obj) {
