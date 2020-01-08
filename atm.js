@@ -208,7 +208,33 @@ function Model (view) {
         this.view.removePerson(person);
         freeAtm.freeState = true;
     }
-    
+
+    this.createTimerObj = function(callback, args, delay) {
+        let timer = {};
+        timer.callback = callback;
+        timer.args = args;
+        timer.delay = delay;
+        timer.start = Date.now();//начало выполнения
+        timer.end = Date.now() + delay;//когда должно закончить
+        timer.id = setTimeout(() => callback(...args), delay);
+        return timer;
+    }
+
+    this.pause = function() {
+        this.timersArr.forEach(item => {
+            item.remain = item.end - Date.now();
+            clearTimeout(item.id);
+        });
+    }
+
+    this.resume = function() {
+        this.timersArr.forEach(item => {
+            item.id = setTimeout(() => item.callback(...item.args), item.remain);
+        });
+    }
+
+
+
 }
 
 
