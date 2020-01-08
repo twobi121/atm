@@ -91,6 +91,7 @@ function Model (view) {
     this.atmArr = [];
     this.personArr = [];
     this.timersArr = [];
+    this.pause = true;
 
     this.startGame = function() {
         this.createAtm();
@@ -132,12 +133,12 @@ function Model (view) {
                     target[prop] = true;
                     that.checkFreeAtm(target.id);
                     target.changeColor();
-                    console.log('свободен')
+
                     return true;
                 } else if (prop == 'freeState' && !val) {
                     target[prop] = false;
                     target.changeColor();
-                    console.log('занят')
+
                     return true;
                 } else {
                     target[prop] = val;
@@ -150,7 +151,7 @@ function Model (view) {
 
     this.initQueue = function() {
 
-        this.timersArr.push(setTimeout(() => this.createPerson(), 2000));
+        this.timersArr.push(this.createTimerObj(this.createPerson.bind(this), [], 2000));
         // setTimeout(() => {
         //     this.proxyArr.forEach(item => this.checkFreeAtm(item))
         // }, 3000);
@@ -167,13 +168,13 @@ function Model (view) {
         }
 
         if (this.personArr.length == 1) {
-            this.timersArr.push(setTimeout( () => this.checkFreeAtm(), 400));
+            this.timersArr.push(this.createTimerObj(this.checkFreeAtm.bind(this), [], 400));
         }
 
 
 
 
-        this.timersArr.push(setTimeout(() => this.createPerson(), 2400));
+        this.timersArr.push(this.createTimerObj(this.createPerson.bind(this), [], 2400));
     }
 
     this.checkFreeAtm = function(obj) {
@@ -201,7 +202,7 @@ function Model (view) {
     this.movePerson = function(person, freeAtm) {
         freeAtm.freeState = false;
         this.view.movePerson(person, freeAtm);
-        this.timersArr.push(setTimeout( () => this.removePerson(person, freeAtm), person.serveTime));
+        this.timersArr.push(this.createTimerObj(this.removePerson.bind(this), [person, freeAtm], person.serveTime ));
     }
 
     this.removePerson = function(person, freeAtm) {
@@ -210,27 +211,41 @@ function Model (view) {
     }
 
     this.createTimerObj = function(callback, args, delay) {
+
         let timer = {};
         timer.callback = callback;
         timer.args = args;
         timer.delay = delay;
         timer.start = Date.now();//начало выполнения
         timer.end = Date.now() + delay;//когда должно закончить
-        timer.id = setTimeout(() => callback(...args), delay);
+        timer.id = setTimeout(() => timer.callback(...timer.args), timer.delay);
         return timer;
     }
 
-    this.pause = function() {
+    this.pauseResumeGame = function() {
+        if (this.pause) {
+            this.pauseGame();
+        } else this.resumeGame();
+    }
+
+    this.pauseGame = function() {
+        this.pause = false;
         this.timersArr.forEach(item => {
             item.remain = item.end - Date.now();
+            console.log(item)
             clearTimeout(item.id);
         });
     }
 
-    this.resume = function() {
+    this.resumeGame = function() {
+        this.pause = true;
         this.timersArr.forEach(item => {
+            if(item.remain < 0) {
+                return
+            }
             item.id = setTimeout(() => item.callback(...item.args), item.remain);
         });
+        this.timersArr = [];
     }
 
 
@@ -259,7 +274,7 @@ function Controller (model, container) {
                     this.stopGame();
                     break;
                 case 'ПАУЗА':
-                    this.pauseGame();
+                    this.pauseResumeGame();
                     break;
             }
 
@@ -275,8 +290,8 @@ function Controller (model, container) {
         this.model.stopGame();
     }
 
-    this.pauseGame = function() {
-        this.model.pauseGame();
+    this.pauseResumeGame = function() {
+        this.model.pauseResumeGame();
     }
 
     
