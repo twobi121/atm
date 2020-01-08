@@ -1,7 +1,6 @@
 
 function View(container) {
     this.container = container;
-    this.id = 1;
 
     this.init = function () {
         this.createBtns();
@@ -63,8 +62,6 @@ function View(container) {
 
     this.drawPerson = function (person) {
         person.createPerson();
-        person.personBlock.setAttribute('idd', this.id);
-        ++this.id;
         person.personBlock.style.backgroundColor = this.generateColor();
         this.queueBlock.append(person.personBlock);
     }
@@ -82,6 +79,12 @@ function View(container) {
 
     this.generateColor = function () {
         return '#' + Math.floor(Math.random()*16777215).toString(16)
+    }
+
+    this.changeBtnValue = function(pause) {
+        if (pause) {
+            this.pauseBtn.innerText = 'ПАУЗА';
+        } else this.pauseBtn.innerText = 'ПРОДОЛЖИТЬ';
     }
 
 }
@@ -211,7 +214,6 @@ function Model (view) {
     }
 
     this.createTimerObj = function(callback, args, delay) {
-
         let timer = {};
         timer.callback = callback;
         timer.args = args;
@@ -230,9 +232,9 @@ function Model (view) {
 
     this.pauseGame = function() {
         this.pause = false;
+        this.view.changeBtnValue(this.pause);
         this.timersArr.forEach(item => {
             item.remain = item.end - Date.now();
-            console.log(item)
             clearTimeout(item.id);
         });
     }
@@ -247,8 +249,6 @@ function Model (view) {
         });
         this.timersArr = [];
     }
-
-
 
 }
 
@@ -274,6 +274,9 @@ function Controller (model, container) {
                     this.stopGame();
                     break;
                 case 'ПАУЗА':
+                    this.pauseResumeGame();
+                    break;
+                case 'ПРОДОЛЖИТЬ':
                     this.pauseResumeGame();
                     break;
             }
@@ -311,7 +314,7 @@ class Atm {
 
     getBottomCoords() {
         this.bottom = this.atmItem.offsetTop + this.atmItem.offsetHeight;
-        this.center = this.atmItem.offsetLeft + this.atmItem.offsetWidth/4;
+        this.center = this.atmItem.offsetLeft + this.atmItem.offsetWidth/2;
     }
 
     changeColor() {
@@ -338,12 +341,6 @@ class Person {
     }
 }
 
-class Queue {
-    constructor() {
-
-    }
-
-}
 
 const container = document.querySelector('.div_app');
 const view = new View(container);
