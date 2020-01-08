@@ -106,7 +106,7 @@ function Model (view) {
     }
 
     this.stopGame = function() {
-        this.timersArr.forEach(item => clearTimeout(item));
+        this.timersArr.forEach(item => clearTimeout(item.id));
         this.timersArr.length = 0;
         this.atmArr.length = 0;
         this.proxyArr.length = 0;
