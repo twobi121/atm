@@ -99,6 +99,7 @@ class Model extends EventEmitter {
         this.timersArr.forEach(item => clearTimeout(item.id));
         this.timersArr.length = 0;
         this.atmArr.length = 0;
+        this.personArr.length = 0;
     }
 
     pauseGame() {
